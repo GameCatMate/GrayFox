@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: MIT */
+:host { border:0; border-radius:8px; overflow:hidden; }
+.listHeader { gap:8px; padding:8px; align-items:center; flex-shrink:0; }
+login-filter { min-width:0; max-width:none; flex:1; margin:0; }
+.create-login-button-container { flex-shrink:0; }
+.meta { gap:8px; padding:0 8px 8px; font-size:12px; flex-shrink:0; }
+.meta label { min-width:0; flex:1; }
+.meta label>span { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+#login-sort { width:100%; padding:4px 8px; font-size:12px; border-radius:8px; background:var(--mybro-field); }
+.count { flex:0 0 auto; max-width:64px; margin:0; font-size:12px; }
+ol { min-height:0; padding:4px 0; }
+.login-list-header { padding:4px 8px; font-size:12px; }
+.intro,.empty-search-message { padding:16px 8px; border:0; }

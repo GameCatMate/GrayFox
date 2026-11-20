@@ -1,0 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+:host { padding:16px; align-items:flex-start; overflow:auto; }
+.illustration { display:none; }
+.heading { margin:0 0 12px; font-size:18px; }
+section { max-width:560px; line-height:1.5; }

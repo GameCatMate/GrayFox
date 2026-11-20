@@ -1,0 +1,6 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Extensions navigation fixture</title><link rel="stylesheet" href="/navigation.css"><style>:root{--sidebar-width:240px;--main-margin-start:24px;--main-margin-end:24px;--page-main-content-width:664px}body{margin:0;color-scheme:light dark;background:light-dark(#fff,#181818);color:light-dark(#222,#eee);font:14px system-ui}#full{display:grid;grid-template-columns:var(--sidebar-width) minmax(0,1fr)}#sidebar{min-width:0}#main{margin-inline:var(--main-margin-start) var(--main-margin-end);max-width:var(--page-main-content-width)}@media(max-width:950px){:root{--sidebar-width:56px}}</style><link rel="stylesheet" href="/addons-layout.css"></head><body><div id="full"><aside id="sidebar">Расширения</aside><div id="content"><main id="main"><h1>Управление расширениями</h1><p>Штатное содержимое менеджера</p></main></div></div>
+<script>
+window.navigationCalls=[];
+window.Services={wm:{getMostRecentWindow:()=>({myBro:{ready:true,openManager:view=>navigationCalls.push(['manager',view]),nativePage:url=>navigationCalls.push(['native',url])}})}};
+window.ChromeUtils={importESModule:()=>({PrivateBrowsingUtils:{isWindowPrivate:()=>new URL(location.href).searchParams.has('private')}})};
+</script><script src="/navigation.js"></script><script src="/addons-navigation.js"></script></body></html>

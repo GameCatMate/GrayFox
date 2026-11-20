@@ -1,0 +1,29 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>myBro bookmark UI fixture</title><link rel="stylesheet" href="/manager.css"><link rel="stylesheet" href="/navigation.css"></head><body><nav id="navigation" aria-label="Разделы браузера"></nav><div id="notice" role="status"></div><main id="content"></main>
+<script>
+(()=>{
+const folder=(guid,title,children=[])=>({guid,title,type:2,children});
+const saved=(guid,title,url)=>({guid,title,type:1,url});
+const ids={rootGuid:'root________',toolbarGuid:'toolbar_____',menuGuid:'menu________',unfiledGuid:'unfiled_____',mobileGuid:'mobile______'};
+const tree=folder(ids.rootGuid,'Root',[
+ folder(ids.menuGuid,'Меню закладок'),
+ folder(ids.toolbarGuid,'Панель закладок',[
+  folder('fixture-it','IT',[
+   saved('fixture-long','GitHub — '+ 'Очень длинное название '.repeat(70),'https://example.test/'+ 'long-path/'.repeat(180)),
+   saved('fixture-docs','Документация','https://example.test/docs'),
+   ...Array.from({length:40},(_,i)=>saved('article-'+i,'Материал '+(i+1),'https://example.test/article/'+i)),
+   folder('fixture-child','Вложенная папка',[folder('fixture-deep','Глубокая папка',[saved('fixture-deep-link','Deep bookmark','https://example.test/deep')])])]),
+  folder('fixture-personal','Личное'),...Array.from({length:32},(_,i)=>folder('project-'+i,'Проект '+(i+1)))]),
+ folder(ids.unfiledGuid,'Другие закладки'),folder(ids.mobileGuid,'Мобильные закладки')]);
+function locate(guid,node=tree,parent=null){if(node.guid===guid)return{node,parent};for(const child of node.children||[]){const found=locate(guid,child,node);if(found)return found;}return null;}
+const bookmarks={...ids,TYPE_FOLDER:2,DEFAULT_INDEX:-1,
+ async insert(value){const parent=locate(value.parentGuid)?.node;if(!parent?.children)throw Error('Missing parent');const guid='new-'+crypto.randomUUID();const node=value.type===2?folder(guid,value.title):saved(guid,value.title,String(value.url));parent.children.push(node);return structuredClone(node);},
+ async update(value){const found=locate(value.guid);if(!found)throw Error('Missing bookmark');if(value.parentGuid){const parent=locate(value.parentGuid)?.node;if(!parent?.children||locate(parent.guid,found.node))throw Error('Invalid move');found.parent.children.splice(found.parent.children.indexOf(found.node),1);parent.children.push(found.node);}if('title'in value)found.node.title=value.title;if('url'in value)found.node.url=String(value.url);return structuredClone(found.node);},
+ async remove(guid){const found=locate(guid);if(!found?.parent)throw Error('Protected root');found.parent.children.splice(found.parent.children.indexOf(found.node),1);}};
+const opened=[];const app={ready:true,read:(_,fallback)=>fallback,openManager:()=>{},nativePage:()=>{}};
+const owner={myBro:app,openTrustedLinkIn:url=>opened.push(url),gBrowser:{tabs:[{label:'UNSAVED OPEN TAB',url:'https://unsaved.test'}]}};
+const library={places:{bookmarks},bookmarkTree:async()=>structuredClone(tree),webURL:value=>{const url=new URL(value);if(!['http:','https:'].includes(url.protocol))throw Error('Invalid URL');return url.href;}};
+window.Services={wm:{getMostRecentWindow:()=>owner},prompt:{confirm:()=>true}};
+window.ChromeUtils={importESModule:path=>path.includes('library.sys.mjs')?library:path.includes('PrivateBrowsingUtils')?{PrivateBrowsingUtils:{isWindowPrivate:()=>false}}:{SearchService:{}}};
+window.bookmarkFixture={tree,opened,locate};
+})();
+</script><script src="/navigation.js"></script><script src="/manager.js"></script></body></html>

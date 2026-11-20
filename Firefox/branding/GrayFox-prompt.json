@@ -1,0 +1,6 @@
+{
+  "tool": "built-in image_gen",
+  "source": "exec-33a2c090-71cf-4a26-9af7-534fc9b21062.png",
+  "final_edit_prompt": "Edit this GrayFox application logo for production use. Preserve the existing silver-gray fox head, pose, smooth silver tail curled around the dark slate sphere, and the overall design. Change ONLY the edge cleanup and framing: remove every detached white or blue fleck, colored edge artifact, little floating fragment, and any dirty halo around the ears, right edge, and lower edge. Give the logo an impeccably clean smooth silhouette with crisp antialiased transparent edges. Fit the complete emblem inside the square with a uniform modest transparent margin of roughly 5% so nothing touches the canvas edge. Preserve the silver, graphite and subtle slate-blue palette; no new decorative elements, no words, no watermark, no solid background, no painted checkerboard. True transparent background.",
+  "generation_prompt_summary": "Original browser emblem for GrayFox: silver gray fox curled around a dark slate sphere, similar in general concept to Firefox but with a distinct silhouette, ears, muzzle and tail; transparent background; no text; readable at favicon size."
+}

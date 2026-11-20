@@ -1,0 +1,9 @@
+/* SPDX-License-Identifier: MIT */
+:host { display:block; min-width:0; font:14px system-ui; }
+.list-item { padding:4px 8px; margin:0 4px; border-inline-start-width:2px; border-radius:4px; }
+.list-item.selected { background:var(--mybro-hover); border-inline-start-color:var(--mybro-link); }
+.labels { min-width:0; min-height:32px; line-height:16px; }
+.title { font-size:14px; }
+.subtitle { font-size:12px; }
+.icon { flex:0 0 16px; margin-inline-end:8px; }
+.alert-icon { margin-inline-start:4px; }

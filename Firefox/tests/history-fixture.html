@@ -1,0 +1,25 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>myBro history UI fixture</title><link rel="stylesheet" href="/manager.css"><link rel="stylesheet" href="/navigation.css"></head><body><nav id="navigation" aria-label="Разделы браузера"></nav><div id="notice" role="status"></div><main id="content"></main>
+<script>
+(()=>{
+const today=new Date();today.setHours(12,0,0,0);
+const rows=[
+ {id:1,title:'GitHub — '+'Очень длинное название '.repeat(70),url:'https://example.test/'+'long-path/'.repeat(180),date:+today},
+ {id:2,title:'Повторное посещение',url:'https://example.test/repeated',date:+today-1000},
+ {id:3,title:'Повторное посещение',url:'https://example.test/repeated',date:+today-2000},
+ ...Array.from({length:1037},(_,i)=>({id:i+4,title:'Материал '+(i+1),url:'https://example.test/article/'+i,date:+today-86400000-i*60000})),
+ {id:'extra:undated',title:'Без даты',url:'https://example.test/undated',date:0,undated:true}];
+const opened=[],removed=[],cleared=[];
+const app={ready:true,read:(_,fallback)=>fallback,openManager:()=>{},nativePage:()=>{}};
+const owner={myBro:app,openTrustedLinkIn:url=>opened.push(url)};
+const fixture={rows,opened,removed,cleared,confirm:false,failId:null};
+const library={places:{},
+ async history(query='',limit=1000){if(query==='slow')await new Promise(resolve=>setTimeout(resolve,600));return structuredClone(rows.filter(x=>(x.title+' '+x.url).toLowerCase().includes(query.toLowerCase())).slice(0,limit));},
+ async removeVisit(item){if(item.id===fixture.failId)throw Error('Не удалось удалить запись');const index=rows.findIndex(x=>x.id===item.id);if(index>=0)rows.splice(index,1);removed.push(item.id);},
+ async clearHistory(since){cleared.push(['history',since]);for(let i=rows.length-1;i>=0;i--)if(!since||rows[i].date>=since)rows.splice(i,1);},
+ clearCookies(since){cleared.push(['cookies',since]);},
+ webURL:value=>{const url=new URL(value);if(!['http:','https:'].includes(url.protocol))throw Error('Invalid URL');return url.href;}};
+window.Services={wm:{getMostRecentWindow:()=>owner},prompt:{confirm:()=>fixture.confirm}};
+window.ChromeUtils={importESModule:path=>path.includes('library.sys.mjs')?library:path.includes('PrivateBrowsingUtils')?{PrivateBrowsingUtils:{isWindowPrivate:()=>false}}:{SearchService:{}}};
+window.historyFixture=fixture;
+})();
+</script><script src="/navigation.js"></script><script src="/manager.js"></script></body></html>

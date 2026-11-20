@@ -1,0 +1,20 @@
+--- a/chrome/browser/ui/ui_features.cc
++++ b/chrome/browser/ui/ui_features.cc
+@@ -547,7 +547,7 @@
+ BASE_FEATURE(kAiOverlayDisableNavigationContext,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+-BASE_FEATURE(kTabGroupsFocusing, base::FEATURE_DISABLED_BY_DEFAULT);
++BASE_FEATURE(kTabGroupsFocusing, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE_PARAM(bool, kTabGroupsFocusFreezing, &kTabGroupsFocusing, true);
+ 
+@@ -563,7 +563,7 @@
+          base::FeatureList::IsEnabled(kTabGroupRibbon);
+ }
+ 
+-BASE_FEATURE(kNonGroupFocus, base::FEATURE_DISABLED_BY_DEFAULT);
++BASE_FEATURE(kNonGroupFocus, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kOmniboxResizingPrioritization, base::FEATURE_ENABLED_BY_DEFAULT);
+ 

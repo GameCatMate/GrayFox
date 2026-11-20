@@ -1,0 +1,10 @@
+{
+  "version": "160.0.1",
+  "locale": "ru",
+  "platform": "mac",
+  "url": "https://archive.mozilla.org/pub/firefox/releases/160.0.1/mac/ru/Firefox%20160.0.1.dmg",
+  "sha256": "cadac498687fd78a21d92767dccaba9a486b25c77c67510b52e87f926b6ebe87",
+  "source_repository": "https://hg.mozilla.org/releases/mozilla-release",
+  "source_revision": "b1145b0710192f716be5f59f5b2dfeed650d5294",
+  "application_id": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+}

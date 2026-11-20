@@ -1,0 +1,24 @@
+/* SPDX-License-Identifier: MIT */
+:root {
+  --mybro-page:light-dark(#f5f5f5,#080808); --mybro-card:light-dark(#fff,#161616);
+  --mybro-field:light-dark(#ececec,#303030); --mybro-hover:light-dark(#eee,#262626);
+  --mybro-text:light-dark(#222,#eee); --mybro-muted:light-dark(#777,#919191);
+  --mybro-line:light-dark(#ddd,#303030); --mybro-link:light-dark(#1769b5,#58adff);
+  --background-color-canvas:var(--mybro-page); --background-color-box:var(--mybro-card);
+  --text-color:var(--mybro-text); --text-color-deemphasized:var(--mybro-muted);
+  --border-color:var(--mybro-line); --border-color-selected:var(--mybro-link);
+  --link-color:var(--mybro-link); --link-color-hover:var(--mybro-link);
+  --focus-outline-color:var(--mybro-link);
+  font:14px system-ui; background:var(--mybro-page); color:var(--mybro-text);
+}
+html { position:static; }
+body { box-sizing:border-box; width:calc(100% - 32px); max-width:1120px; height:calc(100% - 16px); margin:0 auto 16px; grid-template-columns:280px minmax(0,1fr); grid-template-rows:40px minmax(0,1fr); gap:0 8px; background:transparent; }
+header { grid-column:2; grid-row:1; min-width:0; padding:4px 12px; background:var(--mybro-card); border-radius:8px 8px 0 0; }
+header h1 { margin:0 auto 0 0; font-size:16px; line-height:24px; font-weight:600; }
+header fxaccounts-button { display:none; }
+menu-button { margin:0; }
+login-list { grid-column:1; grid-row:1 / -1; min-width:0; min-height:0; }
+login-item,login-intro { grid-column:2; grid-row:2; min-width:0; min-height:0; background:var(--mybro-card); border-radius:0 0 8px 8px; }
+login-item { align-self:start; max-height:100%; overflow:auto; }
+@media(max-width:720px) { body { width:calc(100% - 16px); grid-template-columns:220px minmax(0,1fr); } }
+@media(max-width:540px) { body { grid-template-columns:minmax(0,1fr); grid-template-rows:40px minmax(120px,35%) minmax(0,1fr); } header { grid-column:1; } login-list { grid-column:1; grid-row:2; } login-item,login-intro { grid-column:1; grid-row:3; } }

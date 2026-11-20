@@ -1,0 +1,6 @@
+/* SPDX-License-Identifier: MIT */
+.mybro-navigation{display:flex;gap:4px;justify-content:center;padding:30px 16px 22px;flex-wrap:wrap;font:14px system-ui}
+.mybro-navigation button{appearance:none;cursor:pointer;background:none;border:0;box-shadow:none;margin:0;min-height:0;font:inherit;color:var(--muted,light-dark(#777,#919191));padding:6px 13px;border-radius:24px}
+.mybro-navigation button:hover,.mybro-navigation button.active{background:var(--hover,light-dark(#eee,#262626))}
+.mybro-navigation button.active{color:var(--text,light-dark(#222,#eee))}
+.mybro-navigation button:focus-visible{outline:2px solid var(--link,light-dark(#1769b5,#58adff));outline-offset:2px}

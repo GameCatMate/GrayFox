@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "myBro — экспорт вкладок",
+  "version": "1.0.0",
+  "description": "Локальный экспорт открытых вкладок и стандартных групп в myBro.",
+  "permissions": [
+    "tabs",
+    "tabGroups"
+  ],
+  "incognito": "not_allowed",
+  "action": {
+    "default_title": "Экспорт вкладок для myBro",
+    "default_popup": "popup.html"
+  }
+}

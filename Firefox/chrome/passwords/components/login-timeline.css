@@ -1,0 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+.timeline { grid-template-rows:auto auto; gap:4px 16px; max-width:480px; margin:0; padding-top:8px; text-align:start; font-size:12px; }
+.timeline>svg,.timeline>.line { display:none; }
+.timeline>.date { grid-row:1; padding:0; }
+.timeline>.action { grid-row:2; }

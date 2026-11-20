@@ -1,0 +1,13 @@
+.build/
+*.app
+*.dmg
+*.zip
+graphify-out/
+.playwright-mcp/
+.DS_Store
+__pycache__/
+*.py[cod]
+.env
+.env.*
+*.csv
+*.mybroprofile
