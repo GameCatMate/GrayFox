@@ -29,7 +29,7 @@ def main():
         encoded = screenshot.get('value', screenshot) if isinstance(screenshot, dict) else screenshot
         (ROOT/'.build/firefox/passwords-navigation.png').write_bytes(base64.b64decode(encoded))
         f.js("document.getElementById('mybro-passwords-navigation').lastElementChild.click();return true;")
-        f.wait("gBrowser.currentURI.spec==='about:mybro?view=settings'")
+        f.wait("gBrowser.currentURI.spec==='about:preferences#grayfox'")
         f.wait("document.getElementById('mybro-passwords-navigation').hidden")
         print('PASS: returning to Settings hides the extra chrome navigation', flush=True)
 

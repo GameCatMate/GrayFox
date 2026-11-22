@@ -28,8 +28,10 @@ def main():
         check(f.js("return navigator.userAgent.includes('Firefox/160.0') && !navigator.userAgent.includes('GrayFox/');"),"standard Firefox compatibility User-Agent")
         for view in ["start","history","bookmarks","downloads","settings","profile"]:
             f.js("myBro.openManager(arguments[0]);return true;",[view])
-            f.wait("gBrowser.selectedBrowser.contentDocument?.documentElement?.dataset.ready==='true'")
-            check(not f.js("return gBrowser.selectedBrowser.contentDocument.getElementById('notice').textContent;"),"internal page "+view)
+            flag="grayfoxReady" if view=="settings" else "ready"
+            f.wait("gBrowser.selectedBrowser.contentDocument?.documentElement?.dataset."+flag+"==='true'")
+            notice="grayfox-settings-notice" if view=="settings" else "notice"
+            check(not f.js("return gBrowser.selectedBrowser.contentDocument.getElementById(arguments[0]).textContent;",[notice]),"internal page "+view)
         f.js("myBro.write('groups',[{id:'a',name:'Работа',color:'blue'},{id:'b',name:'Личное',color:'green'}]);myBro.selectGroup('a');myBro.newTab();myBro.selectGroup('b');myBro.newTab();return true;")
         check(f.js("return myBro.visible().length===2 && myBro.visible().every(t=>myBro.groupOf(t)==='b');"),"new tabs inherit selected group")
         f.js("myBro.selectGroup('a');return true;");time.sleep(.2)
@@ -53,17 +55,10 @@ def main():
         check(result,"profile archive encryption and tamper rejection")
         result=task(f,"const {SearchService:S}=ChromeUtils.importESModule('moz-src:///toolkit/components/search/SearchService.sys.mjs');await S.init();return {normal:S.defaultEngine.name,private:S.defaultPrivateEngine.name};")
         check(result["normal"]=="Google" and "DuckDuckGo" in result["private"],"Google normal / DuckDuckGo private search")
-        f.js("myBro.openManager('settings');return true;");f.wait("gBrowser.selectedBrowser.contentDocument?.documentElement?.dataset.ready==='true'")
+        f.js("myBro.openManager('settings');return true;");f.wait("gBrowser.selectedBrowser.contentDocument?.documentElement?.dataset.grayfoxReady==='true'")
         image=f.command("WebDriver:TakeScreenshot",{"full":False})
         encoded=image.get("value",image) if isinstance(image,dict) else image
         (ROOT/'.build/firefox/runtime-settings.png').write_bytes(base64.b64decode(encoded))
-        page=f.js("return gBrowser.selectedBrowser.contentDocument.documentElement.outerHTML;")
-        import re
-        page=re.sub(r'<meta[^>]+Content-Security-Policy[^>]*>','',page,flags=re.I)
-        page=re.sub(r'<script[^>]*>.*?</script>','',page,flags=re.S)
-        page=re.sub(r'<link[^>]*>','',page)
-        page=page.replace('</head>','<style>'+(ROOT/'Firefox/chrome/manager.css').read_text()+(ROOT/'Firefox/chrome/navigation.css').read_text()+'</style></head>')
-        (ROOT/'.build/firefox/runtime-settings.html').write_text('<!doctype html>'+page)
 
         check(not f.js("return Services.console.getMessageArray().some(x=>x.message?.includes('JavaScript Error:')&&x.message?.includes('chrome://browser/content/mybro/'));"),"no myBro JavaScript errors")
         f.js("window.privateTest=OpenBrowserWindow({private:true});return true;")

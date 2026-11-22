@@ -39,6 +39,14 @@ export function clearCookies(since){
   if(!since||c.creationTime/1000>=since){Services.cookies.remove(c.host,c.name,c.path,c.originAttributes);count++;}
  }return count;
 }
+export async function sanitizeBrowsingData(items,options){
+ const {Sanitizer}=ChromeUtils.importESModule("resource:///modules/Sanitizer.sys.mjs");
+ const range=options.ignoreTimespan===false?(options.range||Sanitizer.getClearRange()):null;
+ await Sanitizer.sanitize(items,{...options,range});
+ if(items.includes("history")||items.includes("browsingHistoryAndDownloads")){
+  await updateOverflow(rows=>range?rows.filter(v=>v.date*1000<range[0]||v.date*1000>range[1]):[]);
+ }
+}
 export async function bookmarkTree(){return P.promiseBookmarksTree(P.bookmarks.rootGuid);}
 export async function chooseFile(window,title,save=false,extension="mybroprofile"){
  const picker=Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);

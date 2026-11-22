@@ -23,11 +23,11 @@ def main():
         check(f.js("return gBrowser.tabs.length===2&&myBro.groups().length===2;"),'migrated session and groups survive a restart')
         check(task(f,"return (await Services.logins.getAllLogins()).length;")==1,'native passwords survive a restart')
         check(f.js("return ChromeUtils.importESModule('moz-src:///browser/components/sessionstore/SessionStore.sys.mjs').SessionStore.getClosedTabCountForWindow(window);")>=1,'closed legacy tabs survive a restart')
-        f.js("myBro.openManager('settings');return true;");f.wait("gBrowser.selectedBrowser.contentDocument?.documentElement?.dataset.ready==='true'")
+        f.js("myBro.openManager('settings');return true;");f.wait("gBrowser.selectedBrowser.contentDocument?.documentElement?.dataset.grayfoxReady==='true'")
     with Firefox(profile) as f:
         f.wait('window.myBro?.ready')
-        f.wait("gBrowser.currentURI.spec==='about:mybro?view=settings'&&gBrowser.selectedBrowser.contentDocument?.documentElement?.dataset.ready==='true'")
-        check(not f.js("return gBrowser.selectedBrowser.contentDocument.getElementById('notice').textContent;"),'active internal page survives browser startup ordering')
+        f.wait("gBrowser.currentURI.spec==='about:preferences#grayfox'&&gBrowser.selectedBrowser.contentDocument?.documentElement?.dataset.grayfoxReady==='true'")
+        check(not f.js("return gBrowser.selectedBrowser.contentDocument.getElementById('grayfox-settings-notice').textContent;"),'active internal page survives browser startup ordering')
         f.js("myBro.reopenClosed();return true;");f.wait("gBrowser.currentURI.spec==='https://example.com/closed'")
         check(True,'last closed legacy tab is restored first')
 

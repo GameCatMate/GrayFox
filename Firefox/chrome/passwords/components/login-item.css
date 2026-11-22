@@ -1,13 +1,13 @@
 /* SPDX-License-Identifier: MIT */
 .container { height:auto; overflow:visible; padding:12px 16px 16px; }
-.column { min-height:0; max-width:680px; }
+.column { min-height:0; max-width:520px; }
 form { flex-grow:0; min-width:0; }
 button { min-width:0; }
 .header { margin:0 0 16px; gap:8px; flex-wrap:wrap; }
 .title { flex:1 1 200px; min-width:0; font-size:18px; line-height:24px; overflow-wrap:anywhere; }
 .login-item-favicon { width:20px; height:20px; margin:0; }
 .action-buttons { flex-wrap:wrap; gap:8px; }
-.detail-grid { grid-template-columns:minmax(0,1fr) auto; max-width:560px; gap:16px 8px; }
+.detail-grid { grid-template-columns:minmax(0,1fr) auto; max-width:400px; gap:16px 8px; }
 .detail-grid,.detail-row { margin-bottom:16px; }
 .field-label { margin-bottom:4px; font-size:12px; line-height:16px; color:var(--mybro-muted); }
 input:not([type=checkbox]),input[type=text]:read-only,input[type=url]:read-only,:host(:not([data-editing])) input[type=password]:read-only { box-sizing:border-box; font-size:14px; line-height:20px; min-height:32px; max-width:100%; }

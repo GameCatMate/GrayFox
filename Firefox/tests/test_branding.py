@@ -39,6 +39,11 @@ def main():
             text = f.async_js("const done=arguments[arguments.length-1];fetch('chrome://branding/content/'+arguments[0]).then(r=>r.text()).then(done);", [name])
             assert '>GrayFox<' in text and '>Firefox<' not in text, name
         print('PASS internal wordmarks use GrayFox', flush=True)
+        f.js("myBro.nativePage('about:preferences#home');")
+        f.wait("gBrowser.selectedBrowser.contentWindow?.createDefaultBrowserConfig")
+        assert f.js("return gBrowser.selectedBrowser.contentWindow.createDefaultBrowserConfig().items.every(n=>n.controlAttrs.imagesrc==='chrome://browser/content/mybro/AppIcon.png'&&n.controlAttrs.imagedisplay==='padded');"), 'both default-browser states must use the GrayFox logo without cropping'
+        f.wait("gBrowser.selectedBrowser.contentDocument.querySelector('#isDefaultPane,#isNotDefaultPane')?.shadowRoot?.querySelector('img')?.complete")
+        print('PASS default-browser settings use GrayFox in both states', flush=True)
         # Capture inside the window while the native modal blocks WebDriver commands.
         f.js("""window.brandDialogResult=null;
           const shell=getShellService();shell.doesAppNeedPin=async()=>false;shell.doesAppNeedStartMenuPin=async()=>false;

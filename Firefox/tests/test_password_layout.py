@@ -27,7 +27,7 @@ def main():
         f.js("[...testList.querySelectorAll('[data-guid]')].find(n=>!n.hidden).click();")
         f.wait("testItem.querySelector('input[name=username]').value.startsWith('long-username-')")
 
-        for width in (1280, 800, 480):
+        for width in (1600, 1280, 800, 480):
             f.command('Marionette:SetContext', {'value':'chrome'})
             f.js('window.resizeTo(arguments[0],850);', [width])
             time.sleep(.3)
@@ -36,11 +36,12 @@ def main():
               const row=[...testList.querySelectorAll('[data-guid]')].find(n=>!n.hidden).shadowRoot.querySelector('list-item').shadowRoot.querySelector('li');
               return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,row:r(row),
                 list:r(document.querySelector('login-list')),item:r(document.querySelector('login-item')),
-                grid:r(testItem.querySelector('.detail-grid')),formScroll:testItem.querySelector('form').scrollWidth,
+                grid:r(testItem.querySelector('.detail-grid')),column:r(testItem.querySelector('.column')),formScroll:testItem.querySelector('form').scrollWidth,
                 form:r(testItem.querySelector('form')),sync:getComputedStyle(document.querySelector('fxaccounts-button')).display};""")
             assert geometry['scroll'] <= geometry['viewport'], geometry
             assert geometry['row']['h'] <= 40, geometry
-            assert geometry['grid']['w'] <= 560, geometry
+            assert geometry['grid']['w'] <= 400, geometry
+            assert geometry['column']['w'] <= 520, geometry
             assert geometry['formScroll'] <= geometry['form']['w'] + 1, geometry
             assert geometry['item']['right'] <= geometry['viewport'] and geometry['item']['w'] > 200, geometry
             assert geometry['sync'] == 'none', geometry

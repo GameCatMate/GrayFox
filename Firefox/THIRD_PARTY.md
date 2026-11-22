@@ -18,6 +18,15 @@
 2. `localization/*/branding/brand.ftl` — название GrayFox.
 3. `defaults/preferences/firefox.js` — настройки поставки myBro.
 4. `chrome/browser/content/browser/default-bookmarks.html` — пустой начальный набор закладок с сохранённым MPL-уведомлением.
+5. `chrome/browser/content/browser/sanitizeDialog.js` — вызов штатной очистки через адаптер, который также удаляет импортированную историю GrayFox в том же диапазоне; MPL-уведомление сохранено.
+
+6. `chrome/browser/content/browser/preferences/preferences.xhtml` — подключение навигации и компактного оформления GrayFox; штатные обработчики, настройки и диалоги сохранены.
+
+7. `chrome/browser/content/browser/preferences/main.js` — логотип GrayFox вместо иллюстраций Firefox в обеих конфигурациях блока браузера по умолчанию; обработчики сохранены.
+
+8. `chrome/browser/builtin-addons/newtab/lib/AboutPreferences.sys.mjs` — скрыт блок спонсорства Mozilla в настройках без изменения сохранённых предпочтений.
+
+9. `chrome/browser/content/browser/preferences/config/privacy.mjs`, `widgets/security-privacy-card.mjs`, `localization/ru/browser/preferences/preferences.ftl` — пункт «Отключена», локальный helper и соответствующий статус ETP; MPL-уведомления сохранены.
 
 Также меняются метаданные macOS, `application.ini`, политика обновления и значок; собственные ресурсы добавляются в `chrome/browser/content/browser/mybro/`. Оригинальные лицензии других файлов и компонентов сохраняются в официальной поставке.
 

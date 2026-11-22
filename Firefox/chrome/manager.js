@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 "use strict";
 const lib=ChromeUtils.importESModule("chrome://browser/content/mybro/library.sys.mjs");
-const {SearchService:search}=ChromeUtils.importESModule("moz-src:///toolkit/components/search/SearchService.sys.mjs");
 const {PrivateBrowsingUtils}=ChromeUtils.importESModule("resource://gre/modules/PrivateBrowsingUtils.sys.mjs");
 const embedder=window.browsingContext?.top?.embedderElement;
 const owner=embedder?.documentGlobal||embedder?.ownerGlobal||(window.opener?.myBro?window.opener:null)||Services.wm.getMostRecentWindow("navigator:browser");
@@ -23,7 +22,6 @@ function open(url){owner.openTrustedLinkIn(lib.webURL(url),"tab");}
 function empty(parent,text="Здесь пока ничего нет"){parent.append(el("p",text,"empty"));}
 function day(date){if(!date)return "Без даты";return new Intl.DateTimeFormat("ru",{day:"numeric",month:"long",year:"numeric"}).format(new Date(date));}
 function bytes(n){if(!n)return"0 Б";const u=["Б","КБ","МБ","ГБ"];let i=0;while(n>=1024&&i<u.length-1){n/=1024;i++;}return n.toLocaleString("ru",{maximumFractionDigits:1})+" "+u[i];}
-function field(parent,label,node){const row=el("label",label,"setting");if(node.type==="checkbox"||node.type==="radio")row.prepend(node);else row.append(node);parent.append(row);return node;}
 function period(){const s=el("select");for(const[n,h]of[["За час",1],["За сутки",24],["За неделю",168],["За месяц",720],["За 3 месяца",2160],["За год",8760],["За всё время",0]]){const o=el("option",n);o.value=h;s.append(o);}return s;}
 function since(select){return +select.value?Date.now()-+select.value*3600000:0;}
 async function edit(title,fields,action){
@@ -40,7 +38,7 @@ async function edit(title,fields,action){
 async function showHistory(){
  const{side,body}=layout(),q=input("Поиск в истории"),periods=period();
  document.body.classList.add("history-window");content.classList.add("history-page");side.parentElement.classList.add("history-layout");body.classList.add("history-list-pane");
- periods.setAttribute("aria-label","Период очистки");side.append(q,el("hr"),periods);
+ periods.setAttribute("aria-label","Период очистки");side.append(q,button("Удалить данные просмотра…",async()=>{await app.clearBrowsingData();await render();},"link"),el("hr"),periods);
  side.append(button("Очистить историю",()=>clear("history"),"link"),button("Очистить cookies",()=>clear("cookies"),"link"));
  const c=card("",body),header=el("div","","history-header"),tools=el("div","","history-tools"),count=el("span","","muted"),all=input("Выбрать все показанные записи","checkbox"),allLabel=el("label","Выбрать все","history-select-all"),items=el("div","","history-items");
  count.setAttribute("role","status");allLabel.prepend(all);header.append(el("h2","История"),tools);c.append(header,items);
@@ -160,43 +158,7 @@ async function showDownloads(){
   }if(!shown)empty(c);
  }q.oninput=run(render);await render();
 }
-function boolSetting(parent,label,key,fallback=true,invert=false){const check=input(label,"checkbox");check.checked=invert?!Services.prefs.getBoolPref(key,fallback):Services.prefs.getBoolPref(key,fallback);check.onchange=()=>Services.prefs.setBoolPref(key,invert?!check.checked:check.checked);field(parent,label,check);}
-function ownBool(parent,label,key,fallback=true){const check=input(label,"checkbox");check.checked=app.read(key,fallback);check.onchange=()=>app.write(key,check.checked);field(parent,label,check);}
-function select(parent,label,options,value,action){const s=el("select");for(const[id,text]of options){const o=el("option",text);o.value=id;s.append(o);}s.value=value;s.onchange=run(()=>action(s.value));field(parent,label,s);return s;}
-async function showSettings(){
- const{side,body}=layout(),q=input("Поиск настроек");side.append(q);
- const sections={general:"Общие настройки",interface:"Интерфейс",tools:"Инструменты",sites:"Сайты",system:"Системные",accessibility:"Специальные возможности"};const cards={};
- for(const[id,name]of Object.entries(sections)){const c=card(name,body);c.id=id;cards[id]=c;side.append(button(name,()=>c.scrollIntoView({behavior:app.read("reduceMotion",false)?"instant":"smooth",block:"start"})));}
- const {general:g,interface:i,tools:t,sites:s,system:y,accessibility:a}=cards;
- const primary=el("section","","card");primary.append(el("h2","Сделать GrayFox основным браузером?"),el("p","В нём будут открываться ссылки из других приложений.","muted"),button("Сделать основным",()=>ChromeUtils.importESModule("moz-src:///browser/components/shell/ShellService.sys.mjs").ShellService.setAsDefault(),"primary"));body.prepend(primary);
- g.append(el("h3","Профили"),button("Управление профилями и перенос данных",()=>app.openManager("profile"),"link"));
- g.append(el("h3","Поиск"));await search.init();const engines=(await search.getEngines()).filter(e=>!e.hidden),options=engines.map(e=>[e.id,e.name]);
- select(g,"Поисковая система",options,search.defaultEngine.id,id=>search.setDefault(engines.find(e=>e.id===id),search.CHANGE_REASON.USER));
- select(g,"Поиск в инкогнито",options,search.defaultPrivateEngine.id,id=>search.setDefaultPrivate(engines.find(e=>e.id===id),search.CHANGE_REASON.USER));
- boolSetting(g,"Предлагать поисковые подсказки", "browser.search.suggest.enabled");boolSetting(g,"Предлагать сайты из истории","browser.urlbar.suggest.history");boolSetting(g,"Предлагать закладки","browser.urlbar.suggest.bookmark");boolSetting(g,"Предлагать открытые вкладки","browser.urlbar.suggest.openpage");boolSetting(g,"Подсказки в инкогнито","browser.search.suggest.enabled.private",false);
- i.append(el("h3","Цветовая схема"));const themes=el("div","","themes");for(const[value,label]of[["system","Как в системе"],["light","Светлая"],["dark","Тёмная"]]){const b=button(label,()=>{app.write("theme",value);document.documentElement.dataset.theme=value;themes.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));},"theme "+(app.read("theme","system")===value?"active":""));b.dataset.value=value;themes.append(b);}i.append(themes);
- i.append(el("h3","Новая вкладка"));ownBool(i,"Часы","startClock",false);ownBool(i,"Поисковая строка","startSearch");ownBool(i,"Плитки закладок","startTiles");
- i.append(el("h3","Вкладки и группы"));const restore=input("Восстанавливать вкладки при запуске","checkbox");restore.checked=Services.prefs.getIntPref("browser.startup.page",3)===3;restore.onchange=()=>Services.prefs.setIntPref("browser.startup.page",restore.checked?3:1);field(i,"Восстанавливать вкладки при запуске",restore);ownBool(i,"Открывать дополнительную новую вкладку при запуске","extraStartTab",false);ownBool(i,"Уменьшить анимацию","reduceMotion",false);
- select(i,"Панель закладок",[["always","На всех страницах"],["newtab","На новой вкладке"],["never","Скрыта"]],Services.prefs.getStringPref("browser.toolbars.bookmarks.visibility","always"),v=>{Services.prefs.setStringPref("browser.toolbars.bookmarks.visibility",v);for(const w of Services.wm.getEnumerator("navigator:browser"))w.BookmarkingUI?.updateBookmarkToolbarVisibility();});
- t.append(el("h3","Автозаполнение"));boolSetting(t,"Предлагать сохранять пароли","signon.rememberSignons");boolSetting(t,"Автоматически подставлять пароли","signon.autofillForms");t.append(button("Сохранённые пароли",()=>app.nativePage("about:logins"),"link"));
- t.append(el("h3","Загруженные файлы"));boolSetting(t,"Всегда спрашивать, куда сохранять файлы","browser.download.useDownloadDir",true,true);t.append(button("Изменить папку загрузок…",async()=>{const p=Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);p.init(owner.browsingContext,"Папка загрузок",Ci.nsIFilePicker.modeGetFolder);if(await new Promise(r=>p.open(r))===Ci.nsIFilePicker.returnOK){Services.prefs.setComplexValue("browser.download.dir",Ci.nsIFile,p.file);Services.prefs.setIntPref("browser.download.folderList",2);}},"link"));
- t.append(el("h3","Просмотр файлов"));boolSetting(t,"Открывать PDF-файлы в браузере","pdfjs.disabled",false,true);t.append(button("Снимок страницы",()=>{ChromeUtils.importESModule("moz-src:///browser/components/screenshots/ScreenshotsUtils.sys.mjs").ScreenshotsUtils.start(owner.gBrowser.selectedBrowser);},"link"));
- s.append(el("h3","Разрешения сайтов"));for(const[key,label]of[["camera","Камера"],["microphone","Микрофон"],["desktop-notification","Уведомления"],["geo","Местоположение"]])select(s,label,[["0","Спрашивать"],["2","Блокировать"]],Services.prefs.getIntPref("permissions.default."+key,0),v=>Services.prefs.setIntPref("permissions.default."+key,+v));
- select(s,"Минимальный размер шрифта",[["0","Нет ограничения"],["12","12"],["14","14"],["16","16"],["18","18"]],Services.prefs.getIntPref("font.minimum-size.x-western",0),v=>{for(const language of["x-western","x-cyrillic"])Services.prefs.setIntPref("font.minimum-size."+language,+v);});
- select(s,"Масштаб по умолчанию",[80,90,100,110,120,130,150,175,200].map(v=>[String(v),v+"%"]),app.read("pageZoom",100),v=>lib.setDefaultZoom(owner,+v));s.append(button("Расширенные настройки сайтов",()=>app.nativePage("about:preferences#privacy"),"link"));
- y.append(el("h3","Сеть"));select(y,"Режим только HTTPS",[["off","Выключен"],["private","Только в инкогнито"],["all","Во всех окнах"]],Services.prefs.getBoolPref("dom.security.https_only_mode",false)?"all":Services.prefs.getBoolPref("dom.security.https_only_mode_pbm",false)?"private":"off",v=>{Services.prefs.setBoolPref("dom.security.https_only_mode",v==="all");Services.prefs.setBoolPref("dom.security.https_only_mode_pbm",v!=="off");});y.append(button("Прокси и сеть",()=>app.nativePage("about:preferences#general"),"link"));
- y.append(el("h3","Производительность"));boolSetting(y,"Использовать аппаратное ускорение (после перезапуска)","layers.acceleration.disabled",false,true);boolSetting(y,"Выгружать неиспользуемые вкладки при нехватке памяти","browser.tabs.unloadOnLowMemory");
- y.append(el("h3","Конфиденциальность"),button("Очистить историю и cookies",()=>app.openManager("history"),"link"),button("Сертификаты, язык и безопасность",()=>app.nativePage("about:preferences#privacy"),"link"));
- a.append(el("h3","Доступ к контенту"));boolSetting(a,"Навигация по тексту с помощью курсора","accessibility.browsewithcaret",false);a.append(button("Шрифты, языки и специальные возможности",()=>app.nativePage("about:preferences#general"),"link"));
- y.append(button("Сбросить настройки",async()=>{
-  if(!Services.prompt.confirm(owner,"Сброс настроек","Вернуть настройки GrayFox по умолчанию? Вкладки, группы, история, закладки и пароли сохранятся."))return;
-  for(const key of ["theme","reduceMotion","pageZoom","startClock","startSearch","startTiles","extraStartTab","reuseExternalTab"])Services.prefs.clearUserPref("mybro."+key);
-  const keys=["browser.startup.page","browser.toolbars.bookmarks.visibility","browser.search.suggest.enabled","browser.search.suggest.enabled.private","browser.urlbar.suggest.history","browser.urlbar.suggest.bookmark","browser.urlbar.suggest.openpage","signon.rememberSignons","signon.autofillForms","browser.download.useDownloadDir","browser.download.dir","browser.download.folderList","pdfjs.disabled","font.minimum-size.x-western","font.minimum-size.x-cyrillic","permissions.default.camera","permissions.default.microphone","permissions.default.desktop-notification","permissions.default.geo","dom.security.https_only_mode","dom.security.https_only_mode_pbm","layers.acceleration.disabled","browser.tabs.unloadOnLowMemory","accessibility.browsewithcaret"];
-  for(const key of keys)Services.prefs.clearUserPref(key);await lib.setDefaultZoom(owner,100);
-  const google=engines.find(e=>e.name==="Google"),duck=engines.find(e=>e.name.includes("DuckDuckGo"));if(google)await search.setDefault(google,search.CHANGE_REASON.USER);if(duck)await search.setDefaultPrivate(duck,search.CHANGE_REASON.USER);location.reload();
- },"link"));
- q.oninput=()=>{const value=q.value.toLowerCase();primary.hidden=!!value&&!primary.textContent.toLowerCase().includes(value);for(const c of Object.values(cards))c.hidden=!!value&&!c.textContent.toLowerCase().includes(value);};
-}
+function showSettings(){location.replace("about:preferences#grayfox");}
 async function showProfile(){
  const c=card("Мой профиль");c.append(el("p","Данные GrayFox хранятся в текущем профиле. Старый myBro остаётся отдельным приложением."));c.append(button("Профили GrayFox",()=>app.nativePage("about:profiles"),"link"),button("Расширения",()=>app.nativePage("about:addons"),"link"),button("Пароли",()=>app.nativePage("about:logins"),"link"));
  c.append(el("h3","Перенос профиля"),el("p","Архив GrayFox зашифрован парольной фразой. В него входят вкладки и группы, история, закладки, сохранённые пароли и настройки GrayFox. Cookies, расширения и файлы загрузок в этот переносимый архив не входят.","muted"));
@@ -206,7 +168,7 @@ async function showProfile(){
 }
 async function showStart(){navigation.hidden=true;content.className="start";if(app.read("startClock",false)){const clock=el("div","","clock");const tick=()=>clock.textContent=new Date().toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"});tick();const timer=setInterval(tick,1000);window.addEventListener("unload",()=>clearInterval(timer),{once:true});content.append(clock);}
  const logo=el("img","","start-logo");logo.src="chrome://browser/content/mybro/AppIcon.png";logo.alt="GrayFox";content.append(logo,el("h1",privateMode?"GrayFox · Инкогнито":"GrayFox"));
- if(app.read("startSearch",true)){const form=el("form","","search"),q=input("Поиск");q.type="text";const submit=el("button","⌕");submit.type="submit";form.append(q,submit);form.onsubmit=run(async()=>{});form.addEventListener("submit",e=>{e.preventDefault();owner.gURLBar.search(q.value);});q.oninput=()=>{if(q.value)owner.gURLBar.search(q.value);};content.append(form);}
+ if(app.read("startSearch",true)){const form=el("form","","search"),q=input("Поиск");q.type="text";const submit=el("button");submit.type="submit";submit.setAttribute("aria-label","Поиск");const icon=el("span","","search-icon");icon.setAttribute("aria-hidden","true");submit.append(icon);form.append(q,submit);form.onsubmit=run(async()=>{});form.addEventListener("submit",e=>{e.preventDefault();owner.gURLBar.search(q.value);});q.oninput=()=>{if(q.value)owner.gURLBar.search(q.value);};content.append(form);}
  if(privateMode){content.append(el("p","История и cookies этого окна не сохранятся после закрытия приватных окон. Скачанные файлы и добавленные закладки сохраняются.","private"));return;}
  if(app.read("startTiles",true)){const tree=await lib.bookmarkTree(),tiles=el("div","","tiles"),items=[];const walk=n=>{for(const c of n.children||[]){if(c.uri||c.url)items.push(c);if(items.length<12)walk(c);}};walk(tree);for(const item of items.slice(0,12))tiles.append(button(item.title||new URL(item.uri||item.url).hostname,()=>open(item.uri||item.url),"tile"));content.append(tiles);}
 }
@@ -214,6 +176,7 @@ async function init(){
  const theme=app.read("theme","system");document.documentElement.dataset.theme=theme==="system"?(matchMedia("(prefers-color-scheme:light)").matches?"light":"dark"):theme;
  window.renderMyBroNavigation(navigation,app,privateMode,view);
  document.title=names[view]||"Новая вкладка";
+ document.querySelector('link[rel="icon"]')?.setAttribute("href",window.myBroPageIcons[view]||"chrome://browser/content/mybro/AppIcon.png");
  if(privateMode&&["profile","history"].includes(view)){empty(content,"Этот раздел недоступен в инкогнито");return;}
  const pages={history:showHistory,bookmarks:showBookmarks,downloads:showDownloads,settings:showSettings,profile:showProfile,start:showStart};
  await(pages[view]||showStart)();document.documentElement.dataset.ready="true";

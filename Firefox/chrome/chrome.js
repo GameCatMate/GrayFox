@@ -77,8 +77,8 @@
     const allowed = ["start","profile","bookmarks","downloads","history","settings"];
     if (!allowed.includes(view)) throw new Error("Unknown GrayFox page");
     if (PrivateBrowsingUtils.isWindowPrivate(window) && ["history","profile","bookmarks"].includes(view)) return;
-    const url = "about:mybro?view=" + view;
-    const existing = visible().find(t=>t.linkedBrowser.currentURI.spec===url);
+    const url = view==="settings"?"about:preferences#grayfox":"about:mybro?view=" + view;
+    const existing = visible().find(t=>view==="settings"?t.linkedBrowser.currentURI.spec.split("#",1)[0]==="about:preferences":t.linkedBrowser.currentURI.spec===url);
     if (existing) { gBrowser.selectedTab = existing; return; }
     const tab = gBrowser.addTrustedTab(url,{inBackground:true}); setGroup(tab,current);
     gBrowser.selectedTab = tab; refresh();
@@ -112,7 +112,12 @@
       document.documentElement.setAttribute("data-mybro-theme", read("theme","system"));
       document.documentElement.toggleAttribute("data-mybro-reduce-motion",read("reduceMotion",false));
       applyVisibility();
-      for (const tab of all()) { tab.setAttribute("context","mybro-tab-context");tab.setAttribute("draggable","false"); observer.observe(tab); }
+      for (const tab of all()) {
+        tab.setAttribute("context","mybro-tab-context");tab.setAttribute("draggable","false");observer.observe(tab);
+        const icon=window.myBroPageIcon(SS.getLazyTabValue(tab,"url")||tab.linkedBrowser.currentURI.spec);
+        tab.toggleAttribute("mybro-page-icon",!!icon);
+        if(icon&&tab.getAttribute("image")!==icon)gBrowser.setIcon(tab,icon);
+      }
     });
   }
   const observer = new ResizeObserver(entries => {
@@ -127,7 +132,7 @@
   }
   function divider(parent) { parent.append(xul("menuseparator")); }
   function menu(parent,label,fill) {
-    const item=xul("menu",{label}),popup=xul("menupopup"); item.append(popup);parent.append(item);
+    const item=xul("menu",{label}),popup=xul("menupopup",{nonnative:"true",type:"arrow",class:"mybro-browser-menu"}); item.append(popup);parent.append(item);
     popup.addEventListener("popupshowing",()=>{popup.replaceChildren();fill(popup);});return item;
   }
   function showGroupContext(id,event) {
@@ -186,8 +191,8 @@
     groupArea.append(groupList,dropdown,resize);
     if (!privateWindow) document.getElementById("tabbrowser-tabs").before(groupArea);
     const popups=document.getElementById("mainPopupSet");
-    groupMenu=xul("menupopup",{id:"mybro-groups-popup"}); groupContext=xul("menupopup",{id:"mybro-group-context"});
-    tabContext=xul("menupopup",{id:"mybro-tab-context"});
+    groupMenu=xul("menupopup",{id:"mybro-groups-popup",nonnative:"true",type:"arrow",class:"mybro-browser-menu"}); groupContext=xul("menupopup",{id:"mybro-group-context",nonnative:"true",type:"arrow",class:"mybro-browser-menu"});
+    tabContext=xul("menupopup",{id:"mybro-tab-context",nonnative:"true",type:"arrow",class:"mybro-browser-menu"});
     popups.append(groupMenu,groupContext,tabContext);
     dropdown.addEventListener("click",()=>{
       groupMenu.replaceChildren();menuItem(groupMenu,"Создать группу…",()=>createGroup());divider(groupMenu);
@@ -263,11 +268,41 @@
     host.addEventListener("pointermove",move,true);host.addEventListener("pointerup",end,true);host.addEventListener("pointercancel",end,true);
   }
   function installChrome() {
+    const contentPrefs=Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService2);
+    const zoomPreference={
+      onContentPrefSet(group,name,value){if(group===null)write("pageZoom",Math.round(value*100));},
+      onContentPrefRemoved(group){if(group===null)write("pageZoom",100);}
+    };
+    contentPrefs.addObserverForName("browser.content.full-zoom",zoomPreference);
+    window.addEventListener("unload",()=>contentPrefs.removeObserverForName("browser.content.full-zoom",zoomPreference),{once:true});
+    const toolbarMenu=document.getElementById("toolbar-context-menu");
+    const styleToolbarMenus=()=>{
+      for(const popup of [toolbarMenu,...toolbarMenu.querySelectorAll("menupopup")]){
+        popup.setAttribute("nonnative","true");popup.setAttribute("type","arrow");popup.classList.add("mybro-browser-menu");
+      }
+    };
+    styleToolbarMenus();
+    const menuSections={"appMenu-history-button":"history","appMenu-bookmarks-button":"bookmarks","appMenu-downloads-button":"downloads","appMenu-passwords-button":"passwords","appMenu-extensions-themes-button":"extensions","appMenu-unified-extensions-button":"extensions","appMenu-settings-button":"settings"};
+    const sectionCommands={"Tools:Downloads":"downloads","Browser:ShowAllHistory":"history","Browser:ShowAllBookmarks":"bookmarks","Tools:Addons":"extensions"};
+    document.addEventListener("popupshowing",event=>{
+      if(event.target===toolbarMenu)styleToolbarMenus();
+      if(event.target.id!=="appMenu-popup")return;
+      for(const [id,view]of Object.entries(menuSections)){
+        const node=document.getElementById(id);if(!node)continue;
+        node.removeAttribute("command");node.removeAttribute("closemenu");node.classList.remove("subviewbutton-nav");
+        if(["history","bookmarks"].includes(view))node.disabled=privateWindow;
+        if(view==="history"){node.removeAttribute("data-l10n-id");node.setAttribute("label","История браузера");}
+      }
+    });
+    window.addEventListener("command",event=>{
+      const view=menuSections[event.target.id]||sectionCommands[event.target.id];if(!view)return;
+      event.preventDefault();event.stopImmediatePropagation();PanelUI.hide();window.openMyBroSection(window.myBro,view);
+    },true);
     const navigation=html("nav",{id:"mybro-passwords-navigation","aria-label":"Разделы браузера"});
     document.getElementById("browser").before(navigation);
     window.renderMyBroNavigation(navigation,window.myBro,privateWindow,"passwords");
     const updateNavigation=()=>{navigation.hidden=gBrowser.currentURI.spec.split(/[?#]/,1)[0]!=="about:logins";};
-    const progress={onLocationChange(browser){if(browser===gBrowser.selectedBrowser)updateNavigation();}};
+    const progress={onLocationChange(browser){if(browser===gBrowser.selectedBrowser)updateNavigation();refresh();}};
     gBrowser.addTabsProgressListener(progress);
     gBrowser.tabContainer.addEventListener("TabSelect",updateNavigation);
     window.addEventListener("unload",()=>{gBrowser.removeTabsProgressListener(progress);gBrowser.tabContainer.removeEventListener("TabSelect",updateNavigation);},{once:true});
@@ -322,7 +357,7 @@
       if(event.target.id==="downloadsPanel"&&!document.getElementById("mybro-download-header")){
         const header=html("div",{id:"mybro-download-header"});const title=html("strong");title.textContent="Загрузки";
         const folder=html("button",{type:"button"});folder.textContent="Открыть папку";folder.addEventListener("click",()=>L.downloadFolder().catch(console.error));header.append(title,folder);document.getElementById("downloadsPanel-mainView").prepend(header);
-        const allButton=document.getElementById("downloadsHistory");allButton.removeAttribute("data-l10n-id");allButton.setAttribute("label","↗");allButton.setAttribute("tooltiptext","Все загрузки");allButton.setAttribute("aria-label","Все загрузки");
+        const allButton=document.getElementById("downloadsHistory");allButton.removeAttribute("data-l10n-id");allButton.setAttribute("label","Все загрузки");allButton.setAttribute("tooltiptext","Все загрузки");allButton.setAttribute("aria-label","Все загрузки");
       }
       if(event.target.id==="editBookmarkPanel"&&!document.getElementById("mybro-bookmarks-window")){
         const b=html("button",{id:"mybro-bookmarks-window",type:"button"});b.textContent="Открыть избранное в отдельном окне";
@@ -340,7 +375,8 @@
   function init() {
     if(window.myBro)return;
     window.myBro={groups,groupOf,setGroup,selectGroup,newTab,openManager,createGroup,renameGroup,removeGroup,visible,
-      get current(){return current;},read,write,refresh,closeRelative,nativePage,reopenClosed};
+      get current(){return current;},read,write,refresh,closeRelative,nativePage,reopenClosed,
+      clearBrowsingData:()=>gDialogBox.open("chrome://browser/content/sanitize_v2.xhtml",{inBrowserWindow:true})};
     installGroups();installChrome();
     installLibraryControls().catch(error=>console.error("GrayFox library controls",error));
     current=groupOf(gBrowser.selectedTab);
